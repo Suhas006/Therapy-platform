@@ -68,7 +68,7 @@ function Dashboard() {
     if (user.role === 'Client') {
       const loadInitialData = async () => {
         try {
-          const therapistRes = await axios.get("${import.meta.env.VITE_API_URL}/api/therapists");
+          const therapistRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/therapists`);
           if (therapistRes.data.success) {
             const validTherapists = therapistRes.data.therapists.filter(t => t.userId && t.userId.name && t.isApproved !== false);
             setTherapists(validTherapists);
@@ -87,7 +87,7 @@ function Dashboard() {
     if (user.role === 'Therapist' || user.role === 'Counselor') {
       const loadTherapistData = async () => {
         try {
-          const clientRes = await axios.get("${import.meta.env.VITE_API_URL}/api/auth/clients");
+          const clientRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/clients`);
           if (clientRes.data.success) {
             setClients(clientRes.data.clients);
             if (clientRes.data.clients.length > 0) setActiveChatId(clientRes.data.clients[0]._id);
@@ -102,10 +102,10 @@ function Dashboard() {
     if (user.role === 'Admin') {
       const loadAdminData = async () => {
         try {
-          const res = await axios.get("${import.meta.env.VITE_API_URL}/api/admin/stats");
+          const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/stats`);
           if (res.data.success) setAdminStats(res.data.stats);
 
-          const therapistRes = await axios.get("${import.meta.env.VITE_API_URL}/api/therapists");
+          const therapistRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/therapists`);
           if (therapistRes.data.success) {
             const allTherapists = therapistRes.data.therapists.filter(t => t.userId && t.userId.name);
             setTherapists(allTherapists);
@@ -115,7 +115,7 @@ function Dashboard() {
       loadAdminData();
     }
 
-    socketRef.current = io("${import.meta.env.VITE_API_URL}");
+    socketRef.current = io(`${import.meta.env.VITE_API_URL}`);
     socketRef.current.emit("join_room", user.id);
     socketRef.current.on("receive_message", (data) => {
       setChatHistory((prev) => [...prev, data]);
@@ -154,7 +154,7 @@ function Dashboard() {
   const handleConfirmPaymentAndBook = async () => {
     setShowPaymentModal(false);
     try {
-      await axios.post("${import.meta.env.VITE_API_URL}/api/appointments", { clientId: loggedInUser.id, therapistId: selectedTherapist._id, appointmentDate });
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/appointments`, { clientId: loggedInUser.id, therapistId: selectedTherapist._id, appointmentDate });
       showToast(`Payment of ₹${selectedTherapist.sessionFee} successful! Session booked.`);
       setSelectedTherapist(null);
       setAppointmentDate('');
@@ -180,7 +180,7 @@ function Dashboard() {
     const messagePayload = { senderId: loggedInUser.id, receiverId, message: chatMessage, image: chatImage };
     try {
       socketRef.current.emit("send_message", messagePayload);
-      await axios.post("${import.meta.env.VITE_API_URL}/api/messages", messagePayload);
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/messages`, messagePayload);
       setChatHistory((prev) => [...prev, messagePayload]);
       setChatMessage('');
       setChatImage(null); 
@@ -190,7 +190,7 @@ function Dashboard() {
   const handleAssessmentSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("${import.meta.env.VITE_API_URL}/api/assessments", { 
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/assessments`, { 
         userId: loggedInUser.id, stressLevel, anxietyLevel, notes: assessmentNotes, providerId: assessmentProvider || null 
       });
 

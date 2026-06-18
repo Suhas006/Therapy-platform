@@ -21,7 +21,7 @@ function Register() {
 
     try {
       // Send the exact data the backend expects
-      const res = await axios.post("${import.meta.env.VITE_API_URL}/api/auth/register", formData);
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/register`, formData);
       
       if (res.status === 201) {
         // Success! Send them to the login page

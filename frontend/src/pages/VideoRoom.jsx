@@ -27,7 +27,7 @@ function VideoRoom() {
   };
 
   useEffect(() => {
-    socketRef.current = io("${import.meta.env.VITE_API_URL}");
+    socketRef.current = io(`${import.meta.env.VITE_API_URL}`);
     
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       .then((stream) => {
