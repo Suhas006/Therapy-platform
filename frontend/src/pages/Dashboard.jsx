@@ -68,16 +68,16 @@ function Dashboard() {
     if (user.role === 'Client') {
       const loadInitialData = async () => {
         try {
-          const therapistRes = await axios.get("http://localhost:5000/api/therapists");
+          const therapistRes = await axios.get("${import.meta.env.VITE_API_URL}/api/therapists");
           if (therapistRes.data.success) {
             const validTherapists = therapistRes.data.therapists.filter(t => t.userId && t.userId.name && t.isApproved !== false);
             setTherapists(validTherapists);
             if (validTherapists.length > 0) setActiveChatId(validTherapists[0].userId._id);
           }
-          const reportRes = await axios.get(`http://localhost:5000/api/assessments?userId=${user.id}`);
+          const reportRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/assessments?userId=${user.id}`);
           if (reportRes.data.success) setPastReports(reportRes.data.reports);
 
-          const apptRes = await axios.get(`http://localhost:5000/api/appointments?clientId=${user.id}`);
+          const apptRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/appointments?clientId=${user.id}`);
           if (apptRes.data.success) setClientAppointments(apptRes.data.appointments);
         } catch (err) { console.error("Data load failed:", err.message); }
       };
@@ -87,12 +87,12 @@ function Dashboard() {
     if (user.role === 'Therapist' || user.role === 'Counselor') {
       const loadTherapistData = async () => {
         try {
-          const clientRes = await axios.get("http://localhost:5000/api/auth/clients");
+          const clientRes = await axios.get("${import.meta.env.VITE_API_URL}/api/auth/clients");
           if (clientRes.data.success) {
             setClients(clientRes.data.clients);
             if (clientRes.data.clients.length > 0) setActiveChatId(clientRes.data.clients[0]._id);
           }
-          const apptRes = await axios.get(`http://localhost:5000/api/appointments?therapistUserId=${user.id}`);
+          const apptRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/appointments?therapistUserId=${user.id}`);
           if (apptRes.data.success) setTherapistAppointments(apptRes.data.appointments);
         } catch (err) { console.error("Failed to load provider data:", err.message); }
       };
@@ -102,10 +102,10 @@ function Dashboard() {
     if (user.role === 'Admin') {
       const loadAdminData = async () => {
         try {
-          const res = await axios.get("http://localhost:5000/api/admin/stats");
+          const res = await axios.get("${import.meta.env.VITE_API_URL}/api/admin/stats");
           if (res.data.success) setAdminStats(res.data.stats);
 
-          const therapistRes = await axios.get("http://localhost:5000/api/therapists");
+          const therapistRes = await axios.get("${import.meta.env.VITE_API_URL}/api/therapists");
           if (therapistRes.data.success) {
             const allTherapists = therapistRes.data.therapists.filter(t => t.userId && t.userId.name);
             setTherapists(allTherapists);
@@ -115,7 +115,7 @@ function Dashboard() {
       loadAdminData();
     }
 
-    socketRef.current = io("http://localhost:5000");
+    socketRef.current = io("${import.meta.env.VITE_API_URL}");
     socketRef.current.emit("join_room", user.id);
     socketRef.current.on("receive_message", (data) => {
       setChatHistory((prev) => [...prev, data]);
@@ -130,11 +130,11 @@ function Dashboard() {
     const fetchTargetData = async () => {
       if (!loggedInUser || !activeChatId) return;
       try {
-        const chatRes = await axios.get(`http://localhost:5000/api/messages?senderId=${loggedInUser.id}&receiverId=${activeChatId}`);
+        const chatRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/messages?senderId=${loggedInUser.id}&receiverId=${activeChatId}`);
         if (chatRes.data.success) setChatHistory(chatRes.data.history);
 
         if (loggedInUser.role === 'Therapist' || loggedInUser.role === 'Counselor') {
-          const assessRes = await axios.get(`http://localhost:5000/api/assessments?userId=${activeChatId}&providerId=${loggedInUser.id}`);
+          const assessRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/assessments?userId=${activeChatId}&providerId=${loggedInUser.id}`);
           if (assessRes.data.success) setSelectedClientAssessments(assessRes.data.reports);
         }
       } catch (err) { console.error("Sync error:", err.message); }
@@ -154,12 +154,12 @@ function Dashboard() {
   const handleConfirmPaymentAndBook = async () => {
     setShowPaymentModal(false);
     try {
-      await axios.post("http://localhost:5000/api/appointments", { clientId: loggedInUser.id, therapistId: selectedTherapist._id, appointmentDate });
+      await axios.post("${import.meta.env.VITE_API_URL}/api/appointments", { clientId: loggedInUser.id, therapistId: selectedTherapist._id, appointmentDate });
       showToast(`Payment of ₹${selectedTherapist.sessionFee} successful! Session booked.`);
       setSelectedTherapist(null);
       setAppointmentDate('');
       
-      const apptRes = await axios.get(`http://localhost:5000/api/appointments?clientId=${loggedInUser.id}`);
+      const apptRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/appointments?clientId=${loggedInUser.id}`);
       if (apptRes.data.success) setClientAppointments(apptRes.data.appointments);
     } catch (err) { showToast("Booking transaction validation failure.", "error"); }
   };
@@ -180,7 +180,7 @@ function Dashboard() {
     const messagePayload = { senderId: loggedInUser.id, receiverId, message: chatMessage, image: chatImage };
     try {
       socketRef.current.emit("send_message", messagePayload);
-      await axios.post("http://localhost:5000/api/messages", messagePayload);
+      await axios.post("${import.meta.env.VITE_API_URL}/api/messages", messagePayload);
       setChatHistory((prev) => [...prev, messagePayload]);
       setChatMessage('');
       setChatImage(null); 
@@ -190,7 +190,7 @@ function Dashboard() {
   const handleAssessmentSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:5000/api/assessments", { 
+      const res = await axios.post("${import.meta.env.VITE_API_URL}/api/assessments", { 
         userId: loggedInUser.id, stressLevel, anxietyLevel, notes: assessmentNotes, providerId: assessmentProvider || null 
       });
 
@@ -198,7 +198,7 @@ function Dashboard() {
         showToast("Mental health metrics successfully submitted!");
         setAssessmentNotes('');
         setAssessmentProvider(''); 
-        const reportRes = await axios.get(`http://localhost:5000/api/assessments?userId=${loggedInUser.id}`);
+        const reportRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/assessments?userId=${loggedInUser.id}`);
         if (reportRes.data.success) setPastReports(reportRes.data.reports);
       }
     } catch (err) { showToast("Assessment parsing malfunction.", "error"); }
@@ -215,11 +215,11 @@ function Dashboard() {
         setConfirmDialog({ isOpen: false, message: '', onConfirm: null }); // Close modal
         try {
           if (actionType === 'approve') {
-            await axios.put(`http://localhost:5000/api/admin/therapists/${therapistId}/approve`);
+            await axios.put(`${import.meta.env.VITE_API_URL}/api/admin/therapists/${therapistId}/approve`);
             setTherapists(therapists.map(t => t._id === therapistId ? { ...t, isApproved: true } : t));
             showToast("Specialist Approved! They are now visible to patients.");
           } else {
-            await axios.delete(`http://localhost:5000/api/admin/therapists/${therapistId}/ban`);
+            await axios.delete(`${import.meta.env.VITE_API_URL}/api/admin/therapists/${therapistId}/ban`);
             setTherapists(therapists.filter(t => t._id !== therapistId));
             showToast("Specialist declined and removed from directory.");
           }

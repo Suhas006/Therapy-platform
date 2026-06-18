@@ -27,7 +27,7 @@ function VideoRoom() {
   };
 
   useEffect(() => {
-    socketRef.current = io("http://localhost:5000");
+    socketRef.current = io("${import.meta.env.VITE_API_URL}");
     
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       .then((stream) => {
@@ -197,7 +197,7 @@ function VideoRoom() {
       const user = JSON.parse(userString);
       if (user.role === 'Therapist' || user.role === 'Counselor') {
         try {
-          await axios.put(`http://localhost:5000/api/appointments/${appointmentId}`, { sessionStatus: 'Completed' });
+          await axios.put(`${import.meta.env.VITE_API_URL}/api/appointments/${appointmentId}`, { sessionStatus: 'Completed' });
           socketRef.current.emit("end_video_session", appointmentId);
         } catch (err) { console.error("Failed to close room securely."); }
       }
